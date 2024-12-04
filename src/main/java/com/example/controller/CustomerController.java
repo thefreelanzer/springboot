@@ -1,8 +1,8 @@
 package com.example.controller;
 
 import com.example.dto.CustomerDto;
-import com.example.entity.Customer;
 import com.example.service.CustomerService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +25,7 @@ public class CustomerController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<CustomerDto> addCustomer(@RequestBody CustomerDto customerdto) {
+    public ResponseEntity<CustomerDto> addCustomer(@Valid @RequestBody CustomerDto customerdto) {
         customerdto = customerService.saveCustomer(customerdto);
         return new ResponseEntity<>(customerdto, HttpStatus.CREATED);
     }
