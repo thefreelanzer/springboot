@@ -17,23 +17,4 @@ public class Main {
     public static void main(String[] args) {
         SpringApplication.run(Main.class, args);
     }
-
-    @GetMapping("/")
-    public GreetResponse greet() {
-        return new GreetResponse("Hello!");
-    }
-
-    @GetMapping("/check-db")
-    public String checkDatabaseConnection() {
-        System.out.println("Checking database connection...");  // Debug message
-        try {
-            jdbcTemplate.execute("SELECT * FROM customers");
-            return "MySQL connection is working!";
-        } catch (Exception e) {
-            return "Error connecting to MySQL: " + e.getMessage();
-        }
-    }
-
-    record GreetResponse(String greet) {
-    }
 }
