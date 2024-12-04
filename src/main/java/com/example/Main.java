@@ -27,7 +27,7 @@ public class Main {
     public String checkDatabaseConnection() {
         System.out.println("Checking database connection...");  // Debug message
         try {
-            jdbcTemplate.execute("SELECT * FROM company");
+            jdbcTemplate.execute("SELECT * FROM customers");
             return "MySQL connection is working!";
         } catch (Exception e) {
             return "Error connecting to MySQL: " + e.getMessage();
