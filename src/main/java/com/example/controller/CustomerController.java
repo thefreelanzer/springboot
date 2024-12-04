@@ -1,5 +1,6 @@
 package com.example.controller;
 
+import com.example.dto.CustomerDto;
 import com.example.entity.Customer;
 import com.example.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +19,8 @@ public class CustomerController {
     private CustomerService customerService;
 
     @PostMapping("/add")
-    public ResponseEntity<Customer> addCustomer(@RequestBody Customer customer) {
-        Customer savedCustomer = customerService.saveCustomer(customer);
-        return new ResponseEntity<>(savedCustomer, HttpStatus.CREATED);
+    public ResponseEntity<CustomerDto> addCustomer(@RequestBody CustomerDto customerdto) {
+        customerdto = customerService.saveCustomer(customerdto);
+        return new ResponseEntity<>(customerdto, HttpStatus.CREATED);
     }
 }

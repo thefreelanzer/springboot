@@ -1,17 +1,6 @@
-package com.example.entity;
+package com.example.dto;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.NoArgsConstructor;
-
-@Entity
-@NoArgsConstructor
-public class Customer {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)  // Auto-generating ID
+public class CustomerDto {
     private int id;
     private String name;
     private String email;
@@ -49,11 +38,10 @@ public class Customer {
         this.age = age;
     }
 
-    public Customer(int id, String name, String email, int age) {
+    public CustomerDto(int id, String name, String email, int age) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.age = age;
     }
-
 }
