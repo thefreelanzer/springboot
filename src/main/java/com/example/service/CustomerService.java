@@ -1,6 +1,7 @@
 package com.example.service;
 
 import com.example.dto.CustomerDto;
+import com.example.entity.Address;
 import com.example.entity.Customer;
 import com.example.exception.CustomerException;
 import com.example.repository.CustomerRepository;
@@ -27,6 +28,18 @@ public class CustomerService {
         customer.setName(customerDto.getName());
         customer.setEmail(customerDto.getEmail());
         customer.setAge(customerDto.getAge());
+        customer.setDesignation(customerDto.getDesignation());
+
+        if (customerDto.getAddress() != null) {
+            Address address = new Address();
+            address.setAddressline1(customerDto.getAddress().getAddressline1());
+            address.setAddressline2(customerDto.getAddress().getAddressline2());
+            address.setCity(customerDto.getAddress().getCity());
+            address.setState(customerDto.getAddress().getState());
+            address.setCountry(customerDto.getAddress().getCountry());
+            customer.setAddress(address);
+        }
+
         customer = customerRepository.save(customer);
         customerDto.setId(customer.getId());
         return customerDto;
@@ -35,7 +48,7 @@ public class CustomerService {
     /**
      * method for updating customer
      *
-     * @param id id
+     * @param id          id
      * @param customerDto customerDto
      * @return customerDto or Exception if customer not exist
      */
