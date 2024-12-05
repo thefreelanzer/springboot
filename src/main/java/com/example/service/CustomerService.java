@@ -2,6 +2,7 @@ package com.example.service;
 
 import com.example.dto.CustomerDto;
 import com.example.entity.Customer;
+import com.example.exception.CustomerException;
 import com.example.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -50,7 +51,7 @@ public class CustomerService {
             customerDto.setId(customer.getId());
             return customerDto;
         } else {
-            throw new RuntimeException("Customer with ID " + id + " not found.");
+            throw new CustomerException("Customer with ID " + id + " not found.");
         }
     }
 
@@ -63,7 +64,7 @@ public class CustomerService {
         if (customerRepository.existsById(id)) {
             customerRepository.deleteById(id);
         } else {
-            throw new RuntimeException("Customer with ID " + id + " not found.");
+            throw new CustomerException("Customer with ID " + id + " not found.");
         }
     }
 
