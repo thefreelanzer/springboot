@@ -37,7 +37,9 @@ public class CustomerService {
             address.setCity(customerDto.getAddress().getCity());
             address.setState(customerDto.getAddress().getState());
             address.setCountry(customerDto.getAddress().getCountry());
+
             customer.setAddress(address);
+            address.setCustomer(customer);
         }
 
         customer = customerRepository.save(customer);
@@ -60,6 +62,25 @@ public class CustomerService {
             customer.setName(customerDto.getName());
             customer.setEmail(customerDto.getEmail());
             customer.setAge(customerDto.getAge());
+            customer.setDesignation(customerDto.getDesignation());
+
+            if (customerDto.getAddress() != null) {
+
+                Address address = customer.getAddress();
+                if (address == null) {
+                    address = new Address();
+                }
+
+                address.setAddressline1(customerDto.getAddress().getAddressline1());
+                address.setAddressline2(customerDto.getAddress().getAddressline2());
+                address.setCity(customerDto.getAddress().getCity());
+                address.setState(customerDto.getAddress().getState());
+                address.setCountry(customerDto.getAddress().getCountry());
+
+                customer.setAddress(address);
+                address.setCustomer(customer);
+            }
+
             customer = customerRepository.save(customer);
             customerDto.setId(customer.getId());
             return customerDto;
@@ -94,7 +115,17 @@ public class CustomerService {
             dto.setId(customer.getId());
             dto.setName(customer.getName());
             dto.setAge(customer.getAge());
-            dto.setAge(customer.getAge());
+            dto.setDesignation(customer.getDesignation());
+
+            if (customer.getAddress() != null) {
+                CustomerDto.AddressDto addressDto = new CustomerDto.AddressDto();
+                addressDto.setAddressline1(customer.getAddress().getAddressline1());
+                addressDto.setAddressline2(customer.getAddress().getAddressline2());
+                addressDto.setCity(customer.getAddress().getCity());
+                addressDto.setState(customer.getAddress().getState());
+                addressDto.setCountry(customer.getAddress().getCountry());
+                dto.setAddress(addressDto);
+            }
             return dto;
         }).collect(Collectors.toList());
     }
