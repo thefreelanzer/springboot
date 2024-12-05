@@ -95,11 +95,9 @@ public class CustomerService {
      * @param id id
      */
     public void deleteCustomer(int id) {
-        if (customerRepository.existsById(id)) {
-            customerRepository.deleteById(id);
-        } else {
-            throw new CustomerException("Customer with ID " + id + " not found.");
-        }
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new CustomerException("Customer with ID " + id + " not found."));
+        customerRepository.delete(customer);
     }
 
     /**
