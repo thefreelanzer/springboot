@@ -77,16 +77,9 @@ public class OrderService {
                 orderItem.setPrice(itemDto.getPrice());
                 orderItem.setQuantity(itemDto.getQuantity());
 
-                // Set the Order reference on the OrderItem
-                // orderItem.setOrder(order);
-
-                // orderItems.add(orderItem);
-                // Add the OrderItem to the Order
                 order.addOrderItem(orderItem);
             }
         }
-
-        //order.setOrderItemSet(orderItems);
 
         order.setOrderTrackingNumber(orderDto.getOrderTrackingNumber());
         order.setTotalQuantity(orderDto.getTotalQuantity());
@@ -182,65 +175,60 @@ public class OrderService {
         return orderDto;
     }*/
 
+    @Transactional
     public OrderDto updateOrder(Long orderId, OrderDto orderDto) {
-        Optional<Order> optionalOrder = orderRepository.findById(orderId);
-        if (!optionalOrder.isPresent()) {
-            throw new RuntimeException("Order not found with ID: " + orderId);
-        }
+        // Fetch the existing order from the database
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id " + orderId));
 
-        Order existingOrder = optionalOrder.get();
-
-        // Update basic fields
-        existingOrder.setOrderTrackingNumber(orderDto.getOrderTrackingNumber());
-        existingOrder.setTotalQuantity(orderDto.getTotalQuantity());
-        existingOrder.setTotalPrice(orderDto.getTotalPrice());
-        existingOrder.setStatus(orderDto.getStatus());
+        // Update basic fields of the order
+        order.setOrderTrackingNumber(orderDto.getOrderTrackingNumber());
+        order.setTotalQuantity(orderDto.getTotalQuantity());
+        order.setTotalPrice(orderDto.getTotalPrice());
+        order.setStatus(orderDto.getStatus());
         LocalDateTime now = LocalDateTime.now();
-        existingOrder.setLastUpdated(now);
+        order.setLastUpdated(now);
+
+        // Reflect the updated time in the DTO
         orderDto.setLastUpdated(now);
 
-        // Update order items
-        Set<OrderItem> updatedOrderItems = new HashSet<>();
+        // Update the order items (if necessary)
         if (orderDto.getOrderItem() != null) {
+            // Remove the existing items if necessary (e.g., clear them or update as needed)
+            order.getOrderItemSet().clear();  // Optional: Remove existing items
+            Set<OrderItem> orderItems = new HashSet<>();
+
             for (OrderDto.OrderItemDto itemDto : orderDto.getOrderItem()) {
                 OrderItem orderItem = new OrderItem();
-                if (itemDto.getId() != null) {
-                    // Check if the item exists in the current order
-                    OrderItem existingItem = existingOrder.getOrderItemSet().stream()
-                            .filter(i -> i.getId().equals(itemDto.getId()))
-                            .findFirst()
-                            .orElseThrow(() -> new RuntimeException("Order item not found with ID: " + itemDto.getId()));
-                    orderItem = existingItem;
-                }
-                // Update or add new order item
                 orderItem.setImageUrl(itemDto.getImageUrl());
                 orderItem.setPrice(itemDto.getPrice());
                 orderItem.setQuantity(itemDto.getQuantity());
-                orderItem.setOrder(existingOrder); // Set bidirectional relationship
-                updatedOrderItems.add(orderItem);
+
+                // Add to the set
+                order.add(orderItem);
             }
+
         }
-        existingOrder.setOrderItemSet(updatedOrderItems);
 
-        // Save updated order
-        existingOrder = orderRepository.save(existingOrder);
+        // Save the updated order
+        order = orderRepository.save(order);
 
-        // Update DTO with persisted values
-        orderDto.setId(existingOrder.getId());
-        orderDto.setDateCreated(existingOrder.getDateCreated());
-        orderDto.setLastUpdated(existingOrder.getLastUpdated());
+        // Update the DTO with the saved order ID
+        orderDto.setId(order.getId());
 
+        // Map back the saved OrderItem IDs to DTO
         if (orderDto.getOrderItem() != null) {
             int index = 0;
-            for (OrderItem orderItem : existingOrder.getOrderItemSet()) {
+            for (OrderItem savedOrderItem : order.getOrderItemSet()) {
                 OrderDto.OrderItemDto itemDto = orderDto.getOrderItem().get(index);
-                itemDto.setId(orderItem.getId());
+                itemDto.setId(savedOrderItem.getId());
                 index++;
             }
         }
 
         return orderDto;
     }
+
 
     public void deleteOrder(Long orderId) {
         // Check if the order exists
