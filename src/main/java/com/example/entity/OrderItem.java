@@ -11,8 +11,8 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "order_item")
-@Setter
 @Getter
+@Setter
 public class OrderItem {
 
     @Id
