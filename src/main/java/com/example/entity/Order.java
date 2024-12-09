@@ -45,7 +45,35 @@ public class Order {
 
     // one to many unidirectional mapping
     // default fetch type for OneToMany: LAZY
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "order_id", referencedColumnName = "id")
-    private Set<OrderItem> orderItem = new HashSet<>();
+    //@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    //@JoinColumn(name = "order_id", referencedColumnName = "id")
+    //private Set<OrderItem> orderItem = new HashSet<>();
+
+    // OneToMany with mappedBy to establish bidirectional relationship
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "order")
+    private Set<OrderItem> orderItemSet = new HashSet<>();
+
+    // Helper method to add an item to the order
+//    public void addOrderItem(OrderItem orderItem) {
+//        orderItemSet.add(orderItem);
+//        orderItem.setOrder(this);
+//    }
+
+    // Helper method to remove an item from the order
+//    public void removeOrderItem(OrderItem orderItem) {
+//        orderItemSet.remove(orderItem);
+//        orderItem.setOrder(null);
+//    }
+
+    public void add(OrderItem item) {
+
+        if (item != null) {
+            if (orderItemSet == null) {
+                orderItemSet = new HashSet<>();
+            }
+
+            orderItemSet.add(item);
+            // item.setOrder(this);
+        }
+    }
 }

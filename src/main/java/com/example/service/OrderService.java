@@ -4,6 +4,7 @@ import com.example.dto.OrderDto;
 import com.example.entity.Order;
 import com.example.entity.OrderItem;
 import com.example.repository.OrderRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +18,15 @@ public class OrderService {
     private OrderRepository orderRepository;
 
     public List<OrderDto> getAllOrders() {
-        return orderRepository.findAll().stream().map(order -> {
+        List<Order> orders = orderRepository.findAll();
+        if (orders == null || orders.isEmpty()) {
+            System.out.println("No orders found!");
+            return Collections.emptyList();
+        }
+        System.out.println("Orders retrieved: " + orders.size());
+
+        return orders.stream().map(order -> {
+            System.out.println("Mapping Order ID: " + order.getId());
             OrderDto orderDto = new OrderDto();
             orderDto.setId(order.getId());
             orderDto.setOrderTrackingNumber(order.getOrderTrackingNumber());
@@ -27,21 +36,27 @@ public class OrderService {
             orderDto.setDateCreated(order.getDateCreated());
             orderDto.setLastUpdated(order.getLastUpdated());
 
-            List<OrderDto.OrderItemDto> itemDtos = order.getOrderItem().stream().map(orderItem -> {
-                OrderDto.OrderItemDto itemDto = new OrderDto.OrderItemDto();
-                itemDto.setId(orderItem.getId());
-                itemDto.setImageUrl(orderItem.getImageUrl());
-                itemDto.setPrice(orderItem.getPrice());
-                itemDto.setQuantity(orderItem.getQuantity());
-                return itemDto;
-            }).toList();
-
-            orderDto.setOrderItem(itemDtos);
+            if (order.getOrderItemSet() == null || order.getOrderItemSet().isEmpty()) {
+                System.out.println("No order items found for Order ID: " + order.getId());
+                orderDto.setOrderItem(Collections.emptyList());
+            } else {
+                System.out.println("Order Items count for Order ID: " + order.getId() + " is " + order.getOrderItemSet().size());
+                List<OrderDto.OrderItemDto> itemDtos = order.getOrderItemSet().stream().map(orderItem -> {
+                    OrderDto.OrderItemDto itemDto = new OrderDto.OrderItemDto();
+                    itemDto.setId(orderItem.getId());
+                    itemDto.setImageUrl(orderItem.getImageUrl());
+                    itemDto.setPrice(orderItem.getPrice());
+                    itemDto.setQuantity(orderItem.getQuantity());
+                    return itemDto;
+                }).toList();
+                orderDto.setOrderItem(itemDtos);
+            }
             return orderDto;
         }).toList();
     }
 
     public OrderDto createOrder(OrderDto orderDto) {
+        // Create a new Order entity
         Order order = new Order();
         order.setOrderTrackingNumber(orderDto.getOrderTrackingNumber());
         order.setTotalQuantity(orderDto.getTotalQuantity());
@@ -51,26 +66,118 @@ public class OrderService {
         order.setDateCreated(now);
         order.setLastUpdated(now);
 
+        // Reflect created and updated times in DTO
         orderDto.setDateCreated(now);
         orderDto.setLastUpdated(now);
 
+        // Initialize the orderItems set
         Set<OrderItem> orderItems = new HashSet<>();
+
+        System.out.println("OrderDTO Items Size: " + (orderDto.getOrderItem() != null ? orderDto.getOrderItem().size() : "null"));
         if (orderDto.getOrderItem() != null) {
             for (OrderDto.OrderItemDto itemDto : orderDto.getOrderItem()) {
+                System.out.println("Processing OrderItemDto: " + itemDto);
+
+                // Map DTO to Entity
                 OrderItem orderItem = new OrderItem();
                 orderItem.setImageUrl(itemDto.getImageUrl());
                 orderItem.setPrice(itemDto.getPrice());
                 orderItem.setQuantity(itemDto.getQuantity());
-                orderItems.add(orderItem);
+
+                // Establish bidirectional relationship
+                 orderItem.setOrder(order);
+                 orderItems.add(orderItem);
+                 System.out.println("OrderItem added to Set: " + orderItem);
+
+                 order.add(orderItem);
+                 System.out.println("Order: " + order);
             }
         }
-        order.setOrderItem(orderItems);
+
+        System.out.println("Order Items Setting!!!!");
+
+        for (OrderItem item : orderItems) {
+            System.out.println("OrderItem Details: " + item);
+        }
+
+        // Set the order items on the order
+        // order.setOrderItemSet(orderItems);
+        // System.out.println("Order Items Set: " + orderItems);
+
+
+        // Save the order
+        System.out.println("Saving Order: " + order);
         order = orderRepository.save(order);
+        System.out.println("Order Saved: " + order);
+
+        // Update the DTO with the saved order ID
         orderDto.setId(order.getId());
+
+        // Map back the saved OrderItem IDs to DTO
+        if (orderDto.getOrderItem() != null) {
+            int index = 0;
+            for (OrderItem savedOrderItem : order.getOrderItemSet()) {
+                OrderDto.OrderItemDto itemDto = orderDto.getOrderItem().get(index);
+                itemDto.setId(savedOrderItem.getId());
+                System.out.println("Set ID for OrderItemDto: " + savedOrderItem.getId());
+                index++;
+            }
+        }
+
+        // Return the populated DTO
+        return orderDto;
+    }
+
+    /*public OrderDto updateOrder(Long orderId, OrderDto orderDto) {
+        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+        if (!optionalOrder.isPresent()) {
+            throw new RuntimeException("Order not found with ID: " + orderId);
+        }
+
+        Order existingOrder = optionalOrder.get();
+
+        // Update basic fields
+        existingOrder.setOrderTrackingNumber(orderDto.getOrderTrackingNumber());
+        existingOrder.setTotalQuantity(orderDto.getTotalQuantity());
+        existingOrder.setTotalPrice(orderDto.getTotalPrice());
+        existingOrder.setStatus(orderDto.getStatus());
+        LocalDateTime now = LocalDateTime.now();
+        existingOrder.setLastUpdated(now);
+        orderDto.setLastUpdated(now);
+
+        // Update order items
+        Set<OrderItem> updatedOrderItems = new HashSet<>();
+        if (orderDto.getOrderItem() != null) {
+            for (OrderDto.OrderItemDto itemDto : orderDto.getOrderItem()) {
+                OrderItem orderItem = new OrderItem();
+                if (itemDto.getId() != null) {
+                    // Check if the item exists in the current order
+                    OrderItem existingItem = existingOrder.getOrderItems().stream()
+                            .filter(i -> i.getId().equals(itemDto.getId()))
+                            .findFirst()
+                            .orElseThrow(() -> new RuntimeException("Order item not found with ID: " + itemDto.getId()));
+                    orderItem = existingItem;
+                }
+                // Update or add new order item
+                orderItem.setImageUrl(itemDto.getImageUrl());
+                orderItem.setPrice(itemDto.getPrice());
+                orderItem.setQuantity(itemDto.getQuantity());
+                updatedOrderItems.add(orderItem);
+            }
+        }
+        existingOrder.setOrderItems(updatedOrderItems);
+
+        // Save updated order
+        existingOrder = orderRepository.save(existingOrder);
+
+        // Update DTO with persisted values
+        orderDto.setId(existingOrder.getId());
+        orderDto.setDateCreated(existingOrder.getDateCreated());
+        orderDto.setLastUpdated(existingOrder.getLastUpdated());
 
         if (orderDto.getOrderItem() != null) {
             int index = 0;
-            for (OrderItem orderItem : order.getOrderItem()) {
+            for (OrderItem orderItem : existingOrder.getOrderItems()) {
                 OrderDto.OrderItemDto itemDto = orderDto.getOrderItem().get(index);
                 itemDto.setId(orderItem.getId());
                 index++;
@@ -78,7 +185,7 @@ public class OrderService {
         }
 
         return orderDto;
-    }
+    }*/
 
     public OrderDto updateOrder(Long orderId, OrderDto orderDto) {
         Optional<Order> optionalOrder = orderRepository.findById(orderId);
@@ -104,7 +211,7 @@ public class OrderService {
                 OrderItem orderItem = new OrderItem();
                 if (itemDto.getId() != null) {
                     // Check if the item exists in the current order
-                    OrderItem existingItem = existingOrder.getOrderItem().stream()
+                    OrderItem existingItem = existingOrder.getOrderItemSet().stream()
                             .filter(i -> i.getId().equals(itemDto.getId()))
                             .findFirst()
                             .orElseThrow(() -> new RuntimeException("Order item not found with ID: " + itemDto.getId()));
@@ -114,10 +221,11 @@ public class OrderService {
                 orderItem.setImageUrl(itemDto.getImageUrl());
                 orderItem.setPrice(itemDto.getPrice());
                 orderItem.setQuantity(itemDto.getQuantity());
+                orderItem.setOrder(existingOrder); // Set bidirectional relationship
                 updatedOrderItems.add(orderItem);
             }
         }
-        existingOrder.setOrderItem(updatedOrderItems);
+        existingOrder.setOrderItemSet(updatedOrderItems);
 
         // Save updated order
         existingOrder = orderRepository.save(existingOrder);
@@ -129,7 +237,7 @@ public class OrderService {
 
         if (orderDto.getOrderItem() != null) {
             int index = 0;
-            for (OrderItem orderItem : existingOrder.getOrderItem()) {
+            for (OrderItem orderItem : existingOrder.getOrderItemSet()) {
                 OrderDto.OrderItemDto itemDto = orderDto.getOrderItem().get(index);
                 itemDto.setId(orderItem.getId());
                 index++;

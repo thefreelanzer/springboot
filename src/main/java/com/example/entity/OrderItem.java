@@ -24,4 +24,9 @@ public class OrderItem {
 
     @Column(name = "quantity")
     private int quantity;
+
+    // default fetch type for ManyToOne: EAGER
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
+    private Order order;
 }

@@ -1,5 +1,6 @@
 package com.example.dto;
 
+import com.example.entity.Order;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -40,5 +41,7 @@ public class OrderDto {
         private BigDecimal price;
 
         private int quantity;
+
+        private Order order;
     }
 }
