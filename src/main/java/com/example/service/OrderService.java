@@ -17,6 +17,7 @@ public class OrderService {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Transactional
     public List<OrderDto> getAllOrders() {
         List<Order> orders = orderRepository.findAll();
         if (orders == null || orders.isEmpty()) {
@@ -58,13 +59,7 @@ public class OrderService {
     public OrderDto createOrder(OrderDto orderDto) {
         // Create a new Order entity
         Order order = new Order();
-        order.setOrderTrackingNumber(orderDto.getOrderTrackingNumber());
-        order.setTotalQuantity(orderDto.getTotalQuantity());
-        order.setTotalPrice(orderDto.getTotalPrice());
-        order.setStatus(orderDto.getStatus());
         LocalDateTime now = LocalDateTime.now();
-        order.setDateCreated(now);
-        order.setLastUpdated(now);
 
         // Reflect created and updated times in DTO
         orderDto.setDateCreated(now);
@@ -77,33 +72,34 @@ public class OrderService {
         if (orderDto.getOrderItem() != null) {
             for (OrderDto.OrderItemDto itemDto : orderDto.getOrderItem()) {
                 System.out.println("Processing OrderItemDto: " + itemDto);
-
-                // Map DTO to Entity
                 OrderItem orderItem = new OrderItem();
                 orderItem.setImageUrl(itemDto.getImageUrl());
                 orderItem.setPrice(itemDto.getPrice());
                 orderItem.setQuantity(itemDto.getQuantity());
 
-                // Establish bidirectional relationship
-                 orderItem.setOrder(order);
-                 orderItems.add(orderItem);
-                 System.out.println("OrderItem added to Set: " + orderItem);
+                // Set the Order reference on the OrderItem
+                // orderItem.setOrder(order);
 
-                 order.add(orderItem);
-                 System.out.println("Order: " + order);
+                // orderItems.add(orderItem);
+                // Add the OrderItem to the Order
+                order.addOrderItem(orderItem);
             }
         }
 
-        System.out.println("Order Items Setting!!!!");
+        //order.setOrderItemSet(orderItems);
+
+        order.setOrderTrackingNumber(orderDto.getOrderTrackingNumber());
+        order.setTotalQuantity(orderDto.getTotalQuantity());
+        order.setTotalPrice(orderDto.getTotalPrice());
+        order.setStatus(orderDto.getStatus());
+        order.setDateCreated(now);
+        order.setLastUpdated(now);
+
+        System.out.println("Order Items Setting!!!!" + order);
 
         for (OrderItem item : orderItems) {
             System.out.println("OrderItem Details: " + item);
         }
-
-        // Set the order items on the order
-        // order.setOrderItemSet(orderItems);
-        // System.out.println("Order Items Set: " + orderItems);
-
 
         // Save the order
         System.out.println("Saving Order: " + order);
@@ -124,7 +120,6 @@ public class OrderService {
             }
         }
 
-        // Return the populated DTO
         return orderDto;
     }
 

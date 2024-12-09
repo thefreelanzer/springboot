@@ -1,5 +1,6 @@
 package com.example.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -50,30 +51,17 @@ public class Order {
     //private Set<OrderItem> orderItem = new HashSet<>();
 
     // OneToMany with mappedBy to establish bidirectional relationship
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "order")
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<OrderItem> orderItemSet = new HashSet<>();
 
     // Helper method to add an item to the order
-//    public void addOrderItem(OrderItem orderItem) {
-//        orderItemSet.add(orderItem);
-//        orderItem.setOrder(this);
-//    }
+    public void addOrderItem(OrderItem orderItem) {
+        orderItem.setOrder(this);  // Set the Order reference in the OrderItem
+        this.orderItemSet.add(orderItem);  // Add to the collection
+    }
 
-    // Helper method to remove an item from the order
-//    public void removeOrderItem(OrderItem orderItem) {
-//        orderItemSet.remove(orderItem);
-//        orderItem.setOrder(null);
-//    }
-
-    public void add(OrderItem item) {
-
-        if (item != null) {
-            if (orderItemSet == null) {
-                orderItemSet = new HashSet<>();
-            }
-
-            orderItemSet.add(item);
-            // item.setOrder(this);
-        }
+    public void add(OrderItem orderItem) {
+        orderItemSet.add(orderItem);
+        orderItem.setOrder(this); // Set the order on the orderItem
     }
 }

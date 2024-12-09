@@ -1,14 +1,18 @@
 package com.example.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "order_item")
-@Data
+@Setter
+@Getter
 public class OrderItem {
 
     @Id
@@ -25,7 +29,6 @@ public class OrderItem {
     @Column(name = "quantity")
     private int quantity;
 
-    // default fetch type for ManyToOne: EAGER
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private Order order;
