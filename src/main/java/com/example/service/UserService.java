@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -66,7 +67,7 @@ public class UserService {
 
     }
 
-    public UserDto updateUser(Long id, UserDto userDto) {
+    /*public UserDto updateUser(Long id, UserDto userDto) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User with id " + id + " not found!"));
 
@@ -85,6 +86,36 @@ public class UserService {
         existingUser = userRepository.save(existingUser);
         userDto.setId(existingUser.getId());
         userDto.setRoles(existingUser.getRoles());
+
+        return userDto;
+    }*/
+
+    @Transactional
+    public UserDto updateUser(Long id, UserDto userDto) {
+        System.out.println("updateUser started........................................");
+        int rowsUpdated = userRepository.updateUserInfo(id, userDto.getFirstName(), userDto.getLastName(), userDto.getEmail(), userDto.getPassword());
+        System.out.println(rowsUpdated);
+        if (rowsUpdated == 0) {
+            throw new IllegalArgumentException("User with id " + id + " not found!");
+        }
+        System.out.println("\n1-------------");
+
+        List<Role> roles = roleRepository.findByIdIn(userDto.getRoleIds());
+        if (roles.isEmpty()) {
+            throw new IllegalArgumentException("No valid roles found!");
+        }
+        System.out.println("\n2-------------");
+
+        int rolesUpdated = userRepository.updateUserRoles(id, new HashSet<>(roles));
+        if (rolesUpdated == 0) {
+            throw new IllegalArgumentException("Failed to update roles for user with id " + id);
+        }
+
+        System.out.println("\n3-------------");
+
+        // Return the updated user DTO
+        userDto.setId(id);
+        userDto.setRoles(new HashSet<>(roles));
 
         return userDto;
     }

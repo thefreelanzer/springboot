@@ -26,7 +26,8 @@ public class RoleService {
     }
 
     public List<RoleDto> getAllRoles() {
-        List<Role> roles = roleRepository.findAll();
+        // List<Role> roles = roleRepository.findAllRoles(); // using @Query
+        List<Role> roles = roleRepository.findAllRolesNative(); // Using native query
 
         return roles.stream().map(role -> {
             RoleDto roleDto = new RoleDto();
