@@ -1,6 +1,7 @@
 package com.example.service;
 
 import com.example.dto.RoleDto;
+import com.example.dto.StudentDto;
 import com.example.dto.UserDto;
 import com.example.entity.Role;
 import com.example.entity.User;
@@ -63,5 +64,35 @@ public class UserService {
             return userDto;
         }).collect(Collectors.toList());
 
+    }
+
+    public UserDto updateUser(Long id, UserDto userDto) {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User with id " + id + " not found!"));
+
+        existingUser.setFirstName(userDto.getFirstName());
+        existingUser.setLastName(userDto.getLastName());
+        existingUser.setEmail(userDto.getEmail());
+        existingUser.setPassword(userDto.getPassword());
+
+        List<Role> roles = roleRepository.findByIdIn(userDto.getRoleIds());
+        if (roles.isEmpty()) {
+            throw new IllegalArgumentException("No valid roles found!");
+        }
+
+        existingUser.setRoles(new HashSet<>(roles));
+
+        existingUser = userRepository.save(existingUser);
+        userDto.setId(existingUser.getId());
+        userDto.setRoles(existingUser.getRoles());
+
+        return userDto;
+    }
+
+    public void deleteUser(Long id) {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User with id " + id + " not found!"));
+
+        userRepository.delete(existingUser);
     }
 }

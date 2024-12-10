@@ -1,6 +1,7 @@
 package com.example.controller;
 
 import com.example.dto.RoleDto;
+import com.example.dto.StudentDto;
 import com.example.dto.UserDto;
 import com.example.service.UserService;
 import jakarta.validation.Valid;
@@ -29,5 +30,17 @@ public class UserController {
     public ResponseEntity<List<UserDto>> getAllUsers() {
         List<UserDto> userDtos = userService.getAllUsers();
         return ResponseEntity.ok(userDtos);
+    }
+
+    @PutMapping("/user/{id}")
+    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @RequestBody UserDto userDto) {
+        UserDto updateUser = userService.updateUser(id, userDto);
+        return ResponseEntity.ok(updateUser);
+    }
+
+    @DeleteMapping("/user/{id}")
+    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok("User with ID " + id + " has been deleted.");
     }
 }
