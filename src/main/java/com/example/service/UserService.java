@@ -106,9 +106,12 @@ public class UserService {
         }
         System.out.println("\n2-------------");
 
-        int rolesUpdated = userRepository.updateUserRoles(id, new HashSet<>(roles));
-        if (rolesUpdated == 0) {
-            throw new IllegalArgumentException("Failed to update roles for user with id " + id);
+        // Remove existing roles for the user
+        userRepository.deleteUserRoles(id);
+
+        // Add new roles for the user
+        for (Role role : roles) {
+            userRepository.addUserRole(id, role.getId());
         }
 
         System.out.println("\n3-------------");

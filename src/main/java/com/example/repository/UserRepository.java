@@ -20,6 +20,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE User u SET u.roles = :roles WHERE u.id = :id")
-    int updateUserRoles(@Param("id") Long id, @Param("roles") Set<Role> roles);
+    @Query(value = "DELETE FROM users_roles WHERE user_id = :userId", nativeQuery = true)
+    void deleteUserRoles(@Param("userId") Long userId);
+
+    @Modifying
+    @Transactional
+    @Query(value = "INSERT INTO users_roles (user_id, role_id) VALUES (:userId, :roleId)", nativeQuery = true)
+    void addUserRole(@Param("userId") Long userId, @Param("roleId") Long roleId);
 }
