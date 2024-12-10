@@ -5,9 +5,9 @@ import com.example.entity.Role;
 import com.example.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.awt.print.Pageable;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,7 +27,7 @@ public class RoleService {
         return roleDto;
     }
 
-    public List<RoleDto> getAllRoles() {
+    /*public List<RoleDto> getAllRoles() {
         // List<Role> roles = roleRepository.findAllRoles(); // using @Query
         List<Role> roles = roleRepository.findAllRolesNative(); // Using native query
 
@@ -38,6 +38,25 @@ public class RoleService {
             roleDto.setUsers(role.getUsers());
             return roleDto;
         }).collect(Collectors.toList());
+    }*/
 
+    public Page<RoleDto> getRolesByName(String name, Pageable pageable) {
+        return roleRepository.findByNameContaining(name, pageable)
+                .map(role -> {
+                    RoleDto dto = new RoleDto();
+                    dto.setId(role.getId());
+                    dto.setName(role.getName());
+                    return dto;
+                });
+    }
+
+    public Page<RoleDto> getAllRoles(Pageable pageable) {
+        return roleRepository.findAll(pageable)
+                .map(role -> {
+                    RoleDto dto = new RoleDto();
+                    dto.setId(role.getId());
+                    dto.setName(role.getName());
+                    return dto;
+                });
     }
 }
